@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Scroll Experience</title>
+
+    <style>
+        /* 1. Reset */
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; background: #000;
+            font-family: 'Inter', 'Helvetica', sans-serif;
+        }
+
+        /* 2. The Canvas (Fixed Background) */
+        canvas#c {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover; display: block;
+            z-index: 0;
+        }
+
+        /* 3. Hamburger Menu & Navigation */
+        header {
+            position: fixed;
+            top: 0; right: 0; left: 0;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: flex-start; /* flex-start in RTL means right side */
+            z-index: 10000;
+        }
+        .hamburger {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .hamburger div {
+            width: 32px; height: 2px;
+            background: white;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+        .nav-menu {
+            position: fixed;
+            top: 0; right: -300px; /* Hidden to the right */
+            width: 250px; height: 100vh;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            padding-top: 100px;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            z-index: 9999;
+            border-left: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-menu.active {
+            right: 0;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            font-size: 1.3rem;
+            font-weight: 300;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.1);
+            padding-right: 50px;
+        }
+
+        /* 4. Scrollable Content Overlay */
+        .content {
+            position: relative;
+            z-index: 10;
+        }
+
+        section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .glass-box {
+            background: rgba(25, 25, 25, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 3rem 4rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            max-width: 600px;
+            transform: translateY(30px);
+            opacity: 0;
+            transition: all 1s ease-out;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .glass-box.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .glass-box h1 {
+            font-size: 3rem;
+            margin: 0 0 1rem 0;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .glass-box h2 {
+            font-size: 2.5rem;
+            margin: 0 0 1rem 0;
+            font-weight: 300;
+        }
+
+        .glass-box p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+            40% { transform: translateY(-20px) translateX(-50%); }
+            60% { transform: translateY(-10px) translateX(-50%); }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header & Hamburger -->
+    <header>
+        <div class="hamburger" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </header>
+
+    <!-- Side Menu -->
+    <nav class="nav-menu" id="navMenu">
+        <a href="#" onclick="toggleMenu()">דף הבית</a>
+        <a href="#" onclick="toggleMenu()">מידע</a>
+        <a href="#" onclick="toggleMenu()">שירותים</a>
+        <a href="#" onclick="toggleMenu()">להזמנת השירות</a>
+        <a href="#" onclick="toggleMenu()">צור קשר</a>
+    </nav>
+
+    <!-- The Canvas Background -->
+    <canvas id="c"></canvas>
+
+    <!-- Scrollable Content -->
+    <div class="content">
+        <section>
+            <div class="glass-box">
+                <h1>ברוכים הבאים ל-Get Savta</h1>
+                <p>גללו למטה כדי לגלות מימד חדש של עיצוב ויזואלי ולשלוט באנימציה.</p>
+                <div class="scroll-indicator">↓</div>
+            </div>
+        </section>
+        <section>
+            <div class="glass-box">
+                <h2>ביצועים דינמיים</h2>
+                <p>פריימים איכותיים של וידאו המסונכרנים בצורה מושלמת עם מיקום הגלילה שלכם, לחוויה סוחפת.</p>
+            </div>
+        </section>
+        <section>
+            <div class="glass-box">
+                <h2>מעברים חלקים</h2>
+                <p>כל תנועה מרגישה טבעית. הארכיטקטורה של עיצוב אתרים מודרני מתעוררת לחיים.</p>
+            </div>
+        </section>
+        <section>
+            <div class="glass-box">
+                <h2>מוכנים לצאת לדרך?</h2>
+                <p>תודה שצפיתם בהדגמה.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- SETTINGS ---
+        const vUrl = "./video.mp4"; // Using local video for fast loading and no CORS issues
+        const totalFrames = 100; // Lower this to 60 if loading is too slow
+        // ----------------
+
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d', { alpha: false }); // alpha false can improve performance
+        const frames = [];
+        const startTime = 0.12; // seconds
+        const endPadding = 0.12; // seconds
+        
+        const v = document.createElement('video');
+        v.src = vUrl;
+        v.crossOrigin = "anonymous";
+        v.muted = true;
+        v.preload = "auto";
+        v.playsInline = true;
+        v.setAttribute("playsinline", "");
+
+        async function init() {
+            try {
+                await new Promise((r, reject) => { 
+                    v.onloadedmetadata = r; 
+                    v.onerror = reject;
+                    v.load(); 
+                });
+                
+                const dur = v.duration;
+                if (!dur || isNaN(dur)) throw new Error("Invalid video duration");
+
+                for(let i = 0; i < totalFrames; i++) {
+                    const safeStart = Math.min(startTime, Math.max(0, dur - endPadding));
+                    const safeEnd = Math.max(safeStart, dur - endPadding);
+                    
+                    const denom = Math.max(1, totalFrames - 1);
+                    const t = safeStart + (safeEnd - safeStart) * (i / denom);
+                    
+                    v.currentTime = t;
+                    
+                    await new Promise(r => {
+                        const onSeek = () => {
+                            v.removeEventListener('seeked', onSeek);
+                            const temp = document.createElement('canvas');
+                            temp.width = v.videoWidth; 
+                            temp.height = v.videoHeight;
+                            temp.getContext('2d').drawImage(v, 0, 0);
+                            frames.push(temp);
+                            
+                            // Just push frames and immediately draw first frame when available
+                            if (frames.length === 1) {
+                                draw(0); // Draw first frame immediately to avoid black screen
+                            }
+                            r();
+                        };
+                        v.addEventListener('seeked', onSeek);
+                    });
+                }
+                
+                resize();
+                updateScroll();
+                
+            } catch (e) {
+                console.error("Initialization Error: ", e);
+            }
+        }
+
+        function draw(pct) {
+            if (frames.length === 0) return;
+            let idx = Math.floor(pct * (frames.length - 1));
+            idx = Math.max(0, Math.min(idx, frames.length - 1));
+            
+            const img = frames[idx];
+            const vArt = img.width / img.height;
+            const cArt = canvas.width / canvas.height;
+            let w, h, x, y;
+            
+            if (cArt > vArt) {
+                w = canvas.width; 
+                h = canvas.width / vArt;
+                x = 0; 
+                y = (canvas.height - h) / 2;
+            } else { 
+                h = canvas.height; 
+                w = canvas.height * vArt;
+                x = (canvas.width - w) / 2; 
+                y = 0;
+            }
+            
+            ctx.drawImage(img, x, y, w, h);
+        }
+
+        let ticking = false;
+        function updateScroll() {
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const totalScrollable = docHeight - windowHeight;
+            
+            let percent = totalScrollable > 0 ? scrollTop / totalScrollable : 0; 
+            draw(Math.max(0, Math.min(1, percent)));
+            ticking = false;
+        }
+
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateScroll);
+                ticking = true;
+            }
+        }
+
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            // First draw to fill the screen immediately after resize
+            updateScroll();
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('scroll', requestTick, { passive: true });
+
+        // Fade in text elements as they scroll into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.glass-box').forEach(box => {
+            observer.observe(box);
+        });
+
+        // Toggle Hamburger Menu
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>
